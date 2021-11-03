@@ -1,5 +1,6 @@
 package com.luizalabs.agenda.controller;
 
+import java.time.LocalDateTime;
 import java.util.UUID;
 import java.util.regex.Pattern;
 
@@ -78,11 +79,15 @@ public class AgendaController {
 							.body(new Retorno("Número inválido. Informe no formato DDXXXXXXXXX. Ex.:81993144688", HttpStatus.INTERNAL_SERVER_ERROR.value()));
 				}
 			}
+			if (agendamento.getDataEnvio().isBefore(LocalDateTime.now())) {
+				return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+						.body(new Retorno("A data e hora de envio da mensagem tem que ser maior que a data atual.", HttpStatus.INTERNAL_SERVER_ERROR.value()));
+			}
 
 			Agenda objeto = modelMapper.map(agendamento, Agenda.class);
 			objeto.setStatus(Status.PENDENTE);
 			Agenda agendamentoSalvo = repository.save(objeto);
-			return ResponseEntity.status(HttpStatus.CREATED).body(new Retorno("Agendamento realizado com sucesso! ID: " +agendamentoSalvo.getId().toString(), HttpStatus.CREATED.value()));
+			return ResponseEntity.status(HttpStatus.CREATED).body(new Retorno("Agendamento realizado com sucesso! ID: " + agendamentoSalvo.getId().toString(), HttpStatus.CREATED.value()));
 		} catch (DataIntegrityViolationException e) {
 			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Retorno(e.getMessage(), HttpStatus.BAD_REQUEST.value()));
 		} catch (AddressException ex) {
